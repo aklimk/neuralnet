@@ -81,7 +81,7 @@ xarray<uint8_t> ReadIDX(string file_path)
 	// Construct overall array shape and keep track of 
 	// the total element count.
 	int total_elements = 1;
-	vector<uint16_t> dimension_sizes;
+	vector<size_t> dimension_sizes;
 	for (int i = 0; i < dimension_count; i++) {
 	    uint32_t dimension_size = Read32FromStream(input_stream);
 	    dimension_sizes.push_back(dimension_size);
