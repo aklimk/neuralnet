@@ -1,3 +1,5 @@
+#pragma once
+
 #include <random>
 #include <iostream>
 #include <vector>
@@ -8,6 +10,7 @@
 
 #include "xtensor/xarray.hpp"
 #include "xtensor/xrandom.hpp"
+#include "xtensor/xsort.hpp"
 
 #include "xtensor-blas/xlinalg.hpp"
 
@@ -150,3 +153,42 @@ xarray<float> Inference(NeuralNetwork& network, xarray<float> previous_layer) {
 	
 	return next_layer;
 }
+
+/* Gives an accuracy rate of the network against a classification dataset.
+ * Classifications are assumed to be single-class.
+ *
+ * # Arguments
+ * `network` : A reference to the network state and parameters to use for testing.
+ *
+ * `testing_data` : A pair of inputs and ground truth outputs to use. The ground
+ * truth outputs should be oneshot encoded.
+ *
+ * # Invariants
+ * Assumes that the data corresponds to single-class classifications.
+ *
+ * # Returns
+ * The accuracy of the network against the given single-class classification dataset.
+ * Calculated as correct / total.
+*/
+float Test(NeuralNetwork& network, NetworkData testing_data) {
+	int correct = 0;
+		
+	for (int i = 0; i < testing_data.inputs.shape(0); i++) {
+		xarray<float> outputs = Inference(network, xt::view(testing_data.inputs, i, xt::all()));
+		xarray<float> ground_truth = xt::view(testing_data.targets, i, xt::all());
+
+		if (xt::argmax(outputs) == xt::argmax(ground_truth)) {
+			correct++;
+		}
+	}
+
+	return (float)correct / (float)testing_data.inputs.shape(0);
+}
+
+
+
+void BackPropagation() {};
+
+
+void StochasticGradientDescent() {};
+
