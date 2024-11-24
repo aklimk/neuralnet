@@ -24,7 +24,7 @@ int main() {
         network,
         training_data,
         testing_data,
-        2, // Epochs.
+        5, // Epochs.
         0.05, // Learning rate.
         20 // Batch size.
     );
