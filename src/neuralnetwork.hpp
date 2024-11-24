@@ -154,6 +154,7 @@ xarray<float> Inference(NeuralNetwork& network, xarray<float> previous_layer) {
 	return next_layer;
 }
 
+
 /* Gives an accuracy rate of the network against a classification dataset.
  * Classifications are assumed to be single-class.
  *
@@ -174,21 +175,252 @@ float Test(NeuralNetwork& network, NetworkData testing_data) {
 	int correct = 0;
 		
 	for (int i = 0; i < testing_data.inputs.shape(0); i++) {
+		// Get the ith output inference and ith target array from the dataset.
 		xarray<float> outputs = Inference(network, xt::view(testing_data.inputs, i, xt::all()));
 		xarray<float> ground_truth = xt::view(testing_data.targets, i, xt::all());
 
+		// Check if inference classification was correct.
 		if (xt::argmax(outputs) == xt::argmax(ground_truth)) {
 			correct++;
 		}
 	}
 
+	// return correct / total.
 	return (float)correct / (float)testing_data.inputs.shape(0);
 }
 
 
+/* Estimates the derivatives of all parameters in the network
+ * in relation to the cost function using back propagation,
+ * for a single set of inputs/targets.
+ *
+ * Currently only the mean squared error loss function is
+ * supported / used.
+ *
+ * # Arguments
+ * `network` : The network state and properties to apply 
+ * back propagation over.
+ *
+ * `training_data` : The training data to construct a
+ * derivative against.
+ *
+ * `weights_derivatives` : Location to store resulting
+ * weight derivatives (adds to exisitng values).
+ *
+ * `biases_derivatives` : Location to store resulting
+ * bias derivatives (adds to exisitng values).
+ *
+ * # Invariants
+ * Inputs and targets should only be a one dimensional array.
+*/
+void BackPropagation(
+	NeuralNetwork& network, NetworkData training_data,
+	vector<xarray<float>>& weights_derivatives,
+	vector<xarray<float>>& biases_derivatives
+) {
 
-void BackPropagation() {};
+	// Do an network inference on the inputs, as described in the
+	// neural network inference function. The only difference being
+	// is that the raw non-activation function values are also kept
+	// for each layers neurons. Theese are the z values.
+	vector<xarray<float>> z_arrays;
+	vector<xarray<float>> network_activations = {training_data.inputs};
+	xarray<float> previous_layer = xt::transpose(training_data.inputs);
+	xarray<float> next_layer;
+	for (int i = 0; i < network.layer_sizes.size() - 1; i++) {
+		// Do inference without the activation function.
+		next_layer = xarray<float>::from_shape({(size_t)network.layer_sizes[i + 1]});
+		next_layer = xt::linalg::dot(network.weights[i], previous_layer) + network.biases[i];
+
+		// Save the nueron values before and after the activation function.
+		z_arrays.push_back(next_layer);
+		next_layer = Sigmoid::F(next_layer);
+		network_activations.push_back(next_layer);
+		
+		previous_layer = next_layer;
+	}
+
+	
+	// Layers are indexed with a superscript.
+	// Posiitons within an array/matrix within that
+	// layer is indexed with a subscript
+	// Z^L_j stands for non activated network output.
+	// A^L_j stands for activated network output.
+	// W^L_jk stands for a network weight.
+	// B^L_j stands for a network bias.
+	// A^(L-1)_j, W^L_jk, B^L_j computes Z^L_j.
+	// Z^L_j then computes A^(L+1)_j
+
+	// The network paramters are W and B, thus
+	// it is neccecary to calculate dC/dW, dC/dB. For every W, B.
+	// Using the chain rule.
+	// Thus dC/DW^L_jk = dZ^L_j/DW^L_jk * dA^(L+1)_j/dZ^L_j * dC/dA^(L+1)_j
+
+	// dC/dA^(L+1)_j is just the derivative of the MSE for every last layer activation.
+	// which is simply (A^(L+1)_j - target) * 2.
+    xarray<float> array_delC_delA = (network_activations[network_activations.size() - 1] - training_data.targets) * 2;
+
+	// dA^(L+1)_j/dZ^L_j is just the derivative of the activation function.
+    xarray<float> array_delA_delZ = Sigmoid::FPrime(z_arrays[z_arrays.size() - 1]);
+
+    // dZ^L_j/Dw^L_jk is just A^L. This is becouse, without the activation function,
+    // the weight and previous activation are simpliy multiplied.
+    //
+    // Note each entry in the array represents the derivative for all k indexes
+    // of the weight.
+    xarray<float> array_delZ_delW = network_activations[network_activations.size() - 2];
+
+	// Update weights sample for the last layer.
+    for (int i = 0; i < network.layer_sizes[network.layer_sizes.size() - 1]; i++) {
+    	// Kth indexes of the weight, (dW^L_3k ect), represent the connect of one node in the next layer,
+    	// to all of the nodes in the layer.
+    	// So the weight derivative relies on a single neuron in the next layer, with all of the weights
+    	// connecting that node to the previous layer.
+		xt::view(weights_derivatives[weights_derivatives.size() - 1], i, xt::all()) 
+			+= array_delZ_delW * array_delA_delZ[i] * array_delC_delA[i];
+    }
+    
+	// dZ^L_j/dB^L_j is simply 1, so that term is removed from the chain rule.
+    // Baises are a one dimensional array so it is simply multiplied.
+    biases_derivatives[biases_derivatives.size() - 1] += array_delA_delZ * array_delC_delA;
+
+    
+	// Coninue backpropagation for the rest of the layers.
+	// Save the previously calcualted activation derivatives for calculation.
+	// The calculations are the same, except that each nueron in the previous layer,
+	// influes the cost function on every connection to a node in the next layer,
+	// so dC/dA^L_j invovles the sum of derivatives on the next layer.
+	xarray<float> array_delC_delA_next = array_delC_delA;
+    for (int layer_number = network.layer_sizes.size() - 2; layer_number >= 1; layer_number--) {
+    	
+    	// Create new, zeroed array to hold activation derivatives for the layer.
+	    xarray<float> array_delC_delA = xt::zeros<float>({(size_t)network.layer_sizes[layer_number]});
+
+    	// Loop through neurons in the layer.
+        for (int i = 0; i < network.layer_sizes[layer_number]; i++) {
+        	// The second part is the chain rule for dC/dZ^L_j.
+        	// The first part is the network weights for a partiuclar neuron in the next
+        	// layer feeding back to the previous layer.
+        	auto weights_view = xt::view(network.weights[layer_number], xt::all(), i);
+        	xarray<float> product = weights_view * array_delA_delZ * array_delC_delA_next;
+			array_delC_delA[i] = xt::sum(product)(0);
+	    }
+
+		// Recalculate chain rule components in the same way as the last layer.
+        array_delZ_delW = network_activations[layer_number - 1];
+        array_delA_delZ = Sigmoid::FPrime(z_arrays[layer_number - 1]);
+
+		// Apply calculations to sample derivatives, in the same way as the last layer.
+        for (int i = 0; i < network.layer_sizes[layer_number]; i++) {
+            xt::view(weights_derivatives[layer_number - 1], i, xt::all()) 
+            	+= array_delZ_delW * array_delA_delZ[i] * array_delC_delA[i];
+	    }
+
+        biases_derivatives[layer_number - 1] += array_delA_delZ * array_delC_delA;
+
+        // Save activation derivatives for calculation in the next loop.
+        array_delC_delA_next = array_delC_delA;
+    }
+}
 
 
-void StochasticGradientDescent() {};
+/* Applies backpropagation learning over many smaller batches.
+ * This is roughly equivelent to taking many smaller, less accurate steps
+ * towards the loss functions minima, instead of a large accurate one.
+ *
+ * # Arguments
+ * `network` : The network to train, training is done inplace.
+ *
+ * `training_data` : Data to train from.
+ *
+ * `testing_data` : Data to test from.
+ * 
+ * `epochs` : The number of times to repeat training over the whole training
+ * dataset.
+ *
+ * `batch_size` : The size of each mini batch.
+ *
+ * `learning_rate` : The rate at which the SGD algorithm should follow the negative derivative.
+ * This can be though of as the "step size" in the negative direction of the derivative on 
+ * the graph of the loss function towards the local minimum.
+ *
+ * # Invariants
+ * Assumes the overall array size is divisible by the batch size.
+ */
+void StochasticGradientDescent(
+    NeuralNetwork& network, NetworkData training_data, NetworkData testing_data,
+    int epochs, float learning_rate, int batch_size
+) {
+	std::cout << "Accuracy " << Test(network, testing_data) << "\n" << std::endl;
+
+	for (int epoch = 0; epoch < epochs; epoch++) {
+		std::cout << "epoch: "	<< epoch + 1 << "/" << epochs << std::endl;
+		
+		// Randomize training data. Specify a shared seed so that they
+		// are shuffled the same way.
+		uint32_t seed = std::random_device{}();
+		xt::random::seed(seed);
+		xt::random::shuffle(training_data.inputs);
+		xt::random::seed(seed);
+		xt::random::shuffle(training_data.targets);
+		
+		// Split training data into mini batches.
+		auto input_batches = xt::split(training_data.inputs, training_data.inputs.shape(0) / batch_size);
+		auto target_batches = xt::split(training_data.targets, training_data.inputs.shape(0) / batch_size);
+		
+		// Initilize progress bar that keeps track of minibatch progress.
+		ProgressBar progress_bar = ProgressBar(input_batches.size());
+
+		// Loop through all minibatches and perform SGD on each one.
+		for (int i = 0; i < input_batches.size(); i++) {
+
+			// Batch based estimate of the derivative of the loss function 
+			// at the networks current position. The batch estimate is a
+			// simple sum of all sample estimates. 
+			vector<xarray<float>> weights_derivatives;
+			vector<xarray<float>> biases_derivatives;
+
+			// Populate batch derivatives with zero initilized arrays.
+			for (int j = 0; j < network.layer_sizes.size() - 1; j++) {
+				weights_derivatives.push_back(
+				    xt::zeros<float>({(size_t)network.layer_sizes[j + 1], (size_t)network.layer_sizes[j]})
+				);
+				biases_derivatives.push_back(
+				    xt::zeros<float>({(size_t)network.layer_sizes[j + 1]})
+				);
+			}
+			
+			for (int j = 0; j < input_batches[0].shape(0); j++) {
+				// Single sample based estimate of the derivative of the loss
+				// function at the networks current position. The sample
+				// estimate is added to the batch estimate (total).
+				BackPropagation(
+					network, 
+					{
+						xt::view(input_batches[i], j, xt::all()), 
+						xt::view(target_batches[i], j, xt::all())
+					}, 
+					weights_derivatives, 
+					biases_derivatives
+				);
+			}
+
+			// Move the network parameters in the negative derivative direction estimate
+			// calculated from the batch derivative, with a step size according to the learning rate.
+			for (int j = 0; j < network.layer_sizes.size() - 1; j++) {
+				network.weights[j] = network.weights[j] - learning_rate * weights_derivatives[j];
+				network.biases[j] = network.biases[j] - learning_rate * biases_derivatives[j];
+			}
+
+			// Move the progress bar forward for each completed mini batch.
+			progress_bar.IncrementBar();
+			
+		}
+
+		// Display new accuracy after each epoch.
+		std::cout << std::endl;
+		std::cout << "Accuracy " << Test(network, testing_data) << std::endl;
+		std::cout << std::endl;
+	}
+};
 
