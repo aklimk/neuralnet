@@ -22,9 +22,9 @@ void TestUtilities() {
     // Sigmoid activation function tests.
     xt::xarray<float> testing = {1.0, 5.3, 9.3};
     std::cout << testing << std::endl;
-    xt::xarray<float> r0 = Sigmoid::Activation(testing);
+    xt::xarray<float> r0 = Sigmoid::F(testing);
     std::cout << r0 << std::endl;
-    xt::xarray<float> r1 = Sigmoid::ActivationPrime(testing);
+    xt::xarray<float> r1 = Sigmoid::FPrime(testing);
     std::cout << r1 << std::endl;
     std::cout << std::endl;
 
@@ -49,16 +49,28 @@ void TestUtilities() {
 void TestNetwork() {
     // Network initilization tests.
     NeuralNetwork network = NeuralNetwork({5, 5, 6});
-    for (int i = 0; i < network.layer_sizes.size(); i++) {
+    for (int i = 0; i < network.layer_sizes.size() - 1; i++) {
         std::cout << xt::adapt(network.biases[i].shape()) << std::endl;
         std::cout << network.biases[i] << std::endl;
         std::cout << "\n" << std::endl;
-        if (i < network.layer_sizes.size() - 1) {
-            std::cout << xt::adapt(network.weights[i].shape()) << std::endl;
-            std::cout << network.weights[i] << std::endl;
-            std::cout << "\n\n\n" << std::endl;
-        }
+        
+        std::cout << xt::adapt(network.weights[i].shape()) << std::endl;
+        std::cout << network.weights[i] << std::endl;
+        std::cout << "\n\n\n" << std::endl;
     }
+
+    network = NeuralNetwork({784, 32, 16, 10});
+
+    // Network inference tests.
+    std::string project_dir = R"(C:/users/andre/downloads/neuralnet/mnist)";
+    NetworkData testing_data = LoadMnistDataPair(
+        project_dir + "/t10k-images.idx3-ubyte",
+        project_dir + "/t10k-labels.idx1-ubyte"
+    );
+    xarray<float> output = Inference(network, xt::view(testing_data.inputs, 0, xt::all()));
+    std::cout << xt::adapt(output.shape()) << std::endl;
+    std::cout << output << std::endl;
+    std::cout << "\n\n\n" << std::endl;
 }
 
 

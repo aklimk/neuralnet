@@ -57,7 +57,7 @@ namespace Sigmoid {
 	 * An xtensor xexpression object. Xexpression objects are lazy evauluated, only
 	 * being evaluated when assigned to a container type.
     */
-	auto Activation(xarray<float>& array) {
+	auto F(xarray<float>& array) {
 		return 1.0 / (1.0 + xt::exp(-array));
 	}
 	
@@ -74,7 +74,7 @@ namespace Sigmoid {
 	 * An xtensor xexpression object. Xexpression objects are lazy evauluated, only
 	 * being evaluated when assigned to a container type.
     */
-	auto ActivationPrime(xarray<float>& array) {
-		return Activation(array) * (1 - Activation(array));
+	auto FPrime(xarray<float>& array) {
+		return F(array) * (1 - F(array));
 	}
 };

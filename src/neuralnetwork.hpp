@@ -9,13 +9,12 @@
 #include "xtensor/xarray.hpp"
 #include "xtensor/xrandom.hpp"
 
+#include "xtensor-blas/xlinalg.hpp"
+
 #include "utilities.hpp"
 
 using std::vector;
 using xt::xarray;
-
-// Holds the structure and state of a neural network as well as methods
-// for initilization and serializing/deserializing the network.
 
 /*
  * Holds the structure and state of a neural network as well as the
@@ -23,23 +22,42 @@ using xt::xarray;
  * the network.
  *
  * Biases is a 2d array, which consists of an array of biases for each
- * neuron, for each layer.
+ * neuron, for each layer, excluding the starting layer.
  *
  * Weights is a 3d array, which consits of an array of weights for each
- * neurons connection to the next layer, for each neuron, for each layer.
+ * of the next layers nuerons connection to the previous layers neurons, 
+ * for each neuron, for each layer.
  *
+ * This way each array stores the next layers connection to the previous layer,
+ * which makes inference fast, becouse the inputs can be quickly matrix multiplied,
+ * without having to transpose the matrix.
+ * 
  * I.E for the example network. 
  * (Assume every neuron is connected to every other neuron).
  * n0   n3   n5
  * n1   n4   n6
  * n2        n7
  *
- * The biases array would be { {n0-bias, n1-bias, ...}, {n3-bias, ...}, ... }
- * The shapes would be {3, 2, 3}.
+ * The biases array would be 
+ * { 
+ *    { n3-bias, n4-bias },
+ *    { n5-bias, n6-bias, n7-bias }
+ * }
+ * The shapes of the biasarrays would be {3, 2, 3}.
  *
  * The weights array would be:
- * { { {n0-n3-weight, n0-n4-weight, ...}, {n1-n3-weight, n1-n4-weight, ...}, ... } } 
- * The shapes would be { {3, 2}, {2, 3} }
+ * {
+ *     {
+ *         { n0-n3-weight n1-n3-weight n2-n3-weight },
+ *         { n0-n4-weight n1-n4-weight n2-n4-weight },
+ *     },
+ * 
+ *     {
+ * 	        ...
+ *     }
+ *		
+ * }
+ * The shapes would be { {2, 3}, {3, 2} }
 */
 struct NeuralNetwork
 {
@@ -66,18 +84,69 @@ struct NeuralNetwork
 		
 		for (int i = 0; i < layer_sizes.size(); i++) {
 			// Bias array shape for each layer is simply one bias for each neuron in the layer.
-			xarray<float>::shape_type biases_layer_shape = {(size_t)layer_sizes[i]};
-			biases.push_back(xt::zeros<float>(biases_layer_shape));
+			// except for the input layer.
+			if (i > 0) {
+				xarray<float>::shape_type biases_layer_shape = {(size_t)layer_sizes[i]};
+				biases.push_back(xt::zeros<float>(biases_layer_shape));
+			}
 
 			// Weights array shape for each layer is (layer size, next layer size).
 			// Last layer has no weights, but has biases.
 			if (i < layer_sizes.size() - 1) {
 				vector<size_t> weights_layer_shape;
-				weights_layer_shape.push_back(layer_sizes[i]);
 				weights_layer_shape.push_back(layer_sizes[i + 1]);
+				weights_layer_shape.push_back(layer_sizes[i]);
 				weights.push_back(xt::random::randn<float>(weights_layer_shape, 0.0, 1.0 / (float)layer_sizes[i]));
 			}
 		}
 	}
 };
 
+
+/*
+ * Returns an array of network outputs for an array of network inputs.
+ *
+ * # Arguments
+ * `network` : The neural network structure and state.
+ *
+ * `previous_layer` : An array of inputs to the network.
+ *
+ * # Invariants
+ * Assumes that the input array is 1d.
+*/
+xarray<float> Inference(NeuralNetwork& network, xarray<float> previous_layer) {
+
+	// Take an example network with layer sizes {3, 2, 3}.
+	// n0   n3   n5
+	// n1   n4   n6
+	// n2        n7
+	//
+	// For the first layer operation.
+	// Biases are {n3-b, n4-b}
+	// 
+	// Weights are:
+	// n0-n3-w n1-n3-w n2-n3-w 
+	// n0-n4-w n1-n4-w n2-n4-w
+	//
+	// The calculation for the output is (as a column vector):
+	// Sigmoid(n0*n0-n3-w + n1*n1-n3-w + n2*n2-n3-w) + n3-b)
+	// Sigmoid(n0*n0-n4-w + n1*n1-n4-w + n2*n2-n4-w) + n4-b)
+	//
+	// Which is just:
+	// Sigmoid(matmul(layer_weights * prev_layer^T) + layer_biases)
+    // 
+	// Becouse the output of the calculation 
+	// naturally gives a column vector, only the original
+	// inputs needs to be transposed.
+	previous_layer = xt::transpose(previous_layer);
+
+	xarray<float> next_layer;
+	for (int i = 0; i < network.layer_sizes.size() - 1; i++) {
+		next_layer = xarray<float>::from_shape({(size_t)network.layer_sizes[i + 1]});
+		next_layer = xt::linalg::dot(network.weights[i], previous_layer) + network.biases[i];
+		next_layer = Sigmoid::F(next_layer);
+		previous_layer = next_layer;
+	}
+	
+	return next_layer;
+}
