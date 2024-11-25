@@ -1,3 +1,4 @@
 build/*
 mnist/*
 models/*
+libs/*
