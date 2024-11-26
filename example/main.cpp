@@ -5,7 +5,7 @@
 #include "network.hpp"
 
 // Loads MNIST data and performs stochastic gradient descent.
-void TrainNetwork(NeuralNetwork& network, std::string mnist_path, int epochs, float learning_rate, int batch_size) {
+void TrainNetwork(NeuralNetwork& network, std::string mnist_path, std::string save_dir_path, int epochs, float learning_rate, int batch_size) {
     // Load training and testing data.
     NetworkData training_data = LoadMnistDataPair(
         mnist_path + "/train-images.idx3-ubyte",
@@ -25,6 +25,8 @@ void TrainNetwork(NeuralNetwork& network, std::string mnist_path, int epochs, fl
         learning_rate,
         batch_size
     );
+
+    network.Save(save_dir_path);
 }
 
 // Performs a network inference on a single image, encoded in a
@@ -41,68 +43,57 @@ void ClassifyIDXImage(NeuralNetwork& network, std::string image_path) {
 
 
 int main(int argc, char** argv) {
-    // Send an error message if no command line parameters where specified,
-    // or if there is a parameter sent without an argument attached.
-    if (argc < 3 || (argc % 2 == 0)) {
-        std::cout << 
-            "Use one or both of the following command line arguments. \n\n"
-            "--epochs <epochs> --learning-rate <learning rate> -batch-size <batch size>\n"
-            "Specify at any point before --train to set theese variables\n"
-            "Default values are: epochs: 5, learning-rate: 0.05, batch-size: 20\n\n"
-            "--layer-sizes <va1>,<val2>,<val3> (Do not add spaced between values)\n"
-            "Specify before --train to set network layer structure\n"
-            "NOTE: does not effect first or last layer!\n"
-            "NOTE: do not add spaces between values!\n"
-            "Defualt structure is (784), 128, 64, (10)\n"
-            "I.E. --layer-sizes 128,64\n\n"
-            "--train <path to mnist data folder> \n "
-            "Specify a path to the mnist folder to train the network from. \n\n"
-            "--image <path to image for inference> \n"
-            "Specify a path to an image created with the python drawing pad in order to classify it.\n"
-        << std::endl;
-        return 1;
-    }
+    std::string error_message = 
+        "Training Options:\n"
+        "mnist_example [--epochs <epochs>] [--learning-rate <learning rate>] [--batch-size <batch size>]\n"
+        "   [--layer-sizes <<val1>,<val2>,<val3>>]\n"
+        "   [--load <network directory>]\n"
+        "   [--save-dir <network directory>]\n"
+        "   [--mnist-dir <path to mnist data directory>]\n"
+        "   train\n\n"
+        "Testing Options:\n"
+        "mnist_example [--load <network directory>] [--image-path <path to image to classify> test]";
+
 
     // Network properties.
     int epochs = 5;
     float learning_rate = 0.05;
     int batch_size = 20;
     std::vector<int> layer_sizes = { 784, 128, 64, 10 };
-    NeuralNetwork network = NeuralNetwork(layer_sizes);
 
-    // Parse command line arguments.
-    for (int i = 1; i < argc - 1; i += 2) {
+    // Paths.
+    std::string network_load_dir_path = "";
+    std::string network_save_dir_path = "model";
+    std::string mnist_data_dir_path = "mnist";
+    std::string image_path = "image.idx";
+
+    // Training or testing.
+    int is_training = -1;
+
+    // Parse command line arguments into variables.
+    for (int i = 1; i < argc; i++) {
         std::string argument(argv[i]);
-        std::string value(argv[i + 1]);
-
-        // Train the network.
-        if (argument == "--train") {
-            network = NeuralNetwork(layer_sizes);
-            TrainNetwork(network, value, epochs, learning_rate, batch_size);   
+        std::string value;
+        if (i < argc - 1) {
+            value = std::string(argv[i + 1]);
+            i++;
         }
 
-        // Classify a single digit stroed in an idx file.
-        else if (argument == "--image") {
-            ClassifyIDXImage(network, value);
-        }
+        // Set network properties.
 
-        // Set variables.
-        else if (argument == "--epochs") {
+        if (argument == "--epochs") {
             epochs = std::stoi(value);
         }
-
         else if (argument == "--learning-rate") {
             learning_rate = std::stof(value);
         }
-
         else if (argument == "--batch-size") {
             batch_size = std::stoi(value);
         }
-
         else if (argument == "--layer-sizes") {
             layer_sizes.clear();
             layer_sizes.push_back(784);
-            
+
             // Parse layer sizes comma-delimited array.
             std::istringstream stream(value);
             for (std::string temp; std::getline(stream, temp, ',');) {
@@ -111,5 +102,59 @@ int main(int argc, char** argv) {
 
             layer_sizes.push_back(10);
         }
+
+        
+        // Set paths.
+        else if (argument == "--load") {
+            network_load_dir_path = value;
+        }
+        else if (argument == "--save-dir") {
+            network_save_dir_path = value;
+        }
+        else if (argument == "--mnist-dir") {
+            mnist_data_dir_path = value;
+        }
+        else if (argument == "--image-path") {
+            image_path = value;
+        }
+
+
+        // Set operation type. 1 == train, 0 == test, -1 == neither.
+        else if (argument == "test") {
+            is_training = 0;
+        }
+        else if (argument == "train") {
+            is_training = 1;
+        }
+
+
+        // Unkown argument.
+        else {
+            std::cout << error_message << std::endl;
+            return 1;
+        }
+    }
+
+    // Error if operation unspecified.
+    if (is_training == -1) {
+        std::cout << error_message << std::endl;
+        return 1;
+    }
+
+
+    // Execute arguments.
+    // Construct network with specified layout.
+    NeuralNetwork network = NeuralNetwork(layer_sizes);
+
+    // Always load model before training or testing, if the option was set.
+    if (network_load_dir_path.size() != 0) {
+        network = NeuralNetwork(network_load_dir_path);
+    }
+
+    if (is_training) {
+        TrainNetwork(network, mnist_data_dir_path, network_save_dir_path, epochs, learning_rate, batch_size);
+    }
+    else {
+        ClassifyIDXImage(network, image_path);
     }
 }

@@ -7,10 +7,12 @@
 #include <thread>
 #include <functional>
 #include <filesystem>
+#include <fstream>
 
 #include "xtensor/xarray.hpp"
 #include "xtensor/xrandom.hpp"
 #include "xtensor/xsort.hpp"
+#include "xtensor/xcsv.hpp"
 
 #include "xtensor-blas/xlinalg.hpp"
 
@@ -192,6 +194,59 @@ struct NeuralNetwork
 				weights_layer_shape.push_back(layer_sizes[i]);
 				weights.push_back(xt::random::randn<float>(weights_layer_shape, 0.0, 1.0 / (float)layer_sizes[i]));
 			}
+		}
+	}
+
+	/* Alternate constructor that loads network from directory */
+	NeuralNetwork(std::string dir_path) {
+		// Read layer sizes from file.
+		vector<int> layer_sizes;
+		std::ifstream input_stream;
+		input_stream.open(dir_path + "/layer-sizes.csv", std::ifstream::in);
+		// Read comma delimited layer size array.
+        for (std::string temp; std::getline(input_stream, temp, ',');) {
+            layer_sizes.push_back(std::stoi(temp));
+        }
+		input_stream.close();
+		
+		// Create array using read structure.
+		*this = NeuralNetwork(layer_sizes);
+		
+		// Read weight and bias arrays from files.
+		for (int i = 0; i < layer_sizes.size() - 1; i++) {
+			// Read weight array.
+			input_stream.open(dir_path + "/layer-" + std::to_string(i) + "-weights.csv", std::ifstream::in);
+			weights[i] = xt::load_csv<float>(input_stream);
+			input_stream.close();
+
+			// Read bias array.
+			input_stream.open(dir_path + "/layer-" + std::to_string(i) + "-biases.csv", std::ifstream::in);
+			biases[i] = xt::flatten(xt::load_csv<float>(input_stream));
+			input_stream.close();
+		}
+	}
+
+	/* Save a network to a series of array files */
+	void Save(std::string dir_path) {
+		// Save layer sizes to a file.
+		std::ofstream output_stream;
+		output_stream.open(dir_path + "/layer-sizes.csv", std::ofstream::out);
+		for (int i = 0; i < layer_sizes.size(); i++) {
+			output_stream << layer_sizes[i] << ",";
+		}
+		output_stream.close();
+
+		// Save weight and bias arrays to files.
+		for (int i = 0; i < layer_sizes.size() - 1; i++) {
+			// Save weight array.
+			output_stream.open(dir_path + "/layer-" + std::to_string(i) + "-weights.csv", std::ofstream::out);
+			xt::dump_csv(output_stream, weights[i]);
+			output_stream.close();
+			
+			// Save bias array.
+			output_stream.open(dir_path + "/layer-" + std::to_string(i) + "-biases.csv", std::ofstream::out);
+			xt::dump_csv(output_stream, xt::reshape_view(biases[i], {(size_t)1, (size_t)biases[i].shape(0)}));
+			output_stream.close();
 		}
 	}
 };
