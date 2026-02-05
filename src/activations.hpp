@@ -1,14 +1,14 @@
 #pragma once
 
-#include <xtensor/xarray.hpp>
+#include <xtensor/containers/xarray.hpp>
 
 /*
- * Sigmoid compresses values to a range of [0, 1]. 
+ * Sigmoid compresses values to a range of [0, 1].
  * The compression creates an s like curve.
 */
 namespace Sigmoid {
 	using xt::xarray;
-	
+
 	/*
 	 * Elementwise sigmoid operation on xtensor float array.
 	 *
@@ -24,7 +24,7 @@ namespace Sigmoid {
 	auto F(xarray<float>& array) {
 		return 1.0 / (1.0 + xt::exp(-array));
 	}
-	
+
 	/*
 	 * Elementwise sigmoid derivative operation on xtensor float array.
 	 *

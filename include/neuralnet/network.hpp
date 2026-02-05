@@ -3,21 +3,21 @@
 #include <vector>
 #include <string>
 
-#include <xtensor/xarray.hpp>
+#include <xtensor/containers/xarray.hpp>
 
 
 namespace NeuralNet {
 	using std::vector;
 	using std::string;
 	using xt::xarray;
-	
+
 	/// Structure that holds input and target data as 2d arrays, for a neural network.
 	///
 	/// inputs is a 2d array, corresponding to an array of images. Each image is greyscale
 	/// float encoded, with dimensions 28x28. It corresponds to the network input layer.
 	///
-	/// targets is a 2d array, corresponding to an array of network output layer arrays. 
-	/// targets are the ground truth network response. It is the correct values for the 
+	/// targets is a 2d array, corresponding to an array of network output layer arrays.
+	/// targets are the ground truth network response. It is the correct values for the
 	/// network output layer for each set of inputs.
 	struct NetworkData {
 		xarray<float> inputs;
@@ -33,21 +33,21 @@ namespace NeuralNet {
 	/// neuron, for each layer, excluding the starting layer.
 	///
 	/// Weights is a 3d array, which consits of an array of weights for each
-	/// of the next layers nuerons connection to the previous layers neurons, 
+	/// of the next layers nuerons connection to the previous layers neurons,
 	/// for each neuron, for each layer.
 	///
 	/// This way each array stores the next layers connection to the previous layer,
 	/// which makes inference fast, becouse the inputs can be quickly matrix multiplied,
 	/// without having to transpose the matrix.
-	/// 
-	/// I.E for the example network. 
+	///
+	/// I.E for the example network.
 	/// (Assume every neuron is connected to every other neuron).
 	/// n0   n3   n5
 	/// n1   n4   n6
 	/// n2        n7
 	///
-	/// The biases array would be 
-	/// { 
+	/// The biases array would be
+	/// {
 	///    { n3-bias, n4-bias },
 	///    { n5-bias, n6-bias, n7-bias }
 	/// }
@@ -59,11 +59,11 @@ namespace NeuralNet {
 	///         { n0-n3-weight n1-n3-weight n2-n3-weight },
 	///         { n0-n4-weight n1-n4-weight n2-n4-weight },
 	///     },
-	/// 
+	///
 	///     {
 	/// 	        ...
 	///     }
-	///		
+	///
 	/// }
 	/// The shapes would be { {2, 3}, {3, 2} }
 	struct Network
@@ -72,16 +72,16 @@ namespace NeuralNet {
 		vector<int> layer_sizes;
 		vector<xarray<float>> weights;
 		vector<xarray<float>> biases;
-	
-		/// Initilization function for the neural network. 
+
+		/// Initilization function for the neural network.
 		/// Initilizes biases to 0, and weights to a normal distribution
 		/// with mean 0 and variance 1 / layer size.
-		/// 
+		///
 		/// # Arguments
 		/// `layer_sizes` : The number of neurons in each layer
 		/// of the neural network.
 		Network(vector<int> layer_sizes);
-	
+
 		/// Alternate constructor that loads network from directory.
 		Network(string dir_path);
 
@@ -128,7 +128,7 @@ namespace NeuralNet {
 	/// supported / used.
 	///
 	/// # Arguments
-	/// `network` : The network state and properties to apply 
+	/// `network` : The network state and properties to apply
 	/// back propagation over.
 	///
 	/// `training_data` : The training data to construct a
@@ -158,14 +158,14 @@ namespace NeuralNet {
 	/// `training_data` : Data to train from.
 	///
 	/// `testing_data` : Data to test from.
-	/// 
+	///
 	/// `epochs` : The number of times to repeat training over the whole training
 	/// dataset.
 	///
 	/// `batch_size` : The size of each mini batch.
 	///
 	/// `learning_rate` : The rate at which the SGD algorithm should follow the negative derivative.
-	/// This can be though of as the "step size" in the negative direction of the derivative on 
+	/// This can be though of as the "step size" in the negative direction of the derivative on
 	/// the graph of the loss function towards the local minimum.
 	///
 	/// # Invariants

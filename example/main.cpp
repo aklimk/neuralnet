@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 
-#include <xtensor/xarray.hpp>
-#include <xtensor/xsort.hpp>
-#include <xtensor/xio.hpp>
+#include <xtensor/containers/xarray.hpp>
+#include <xtensor/misc/xsort.hpp>
+#include <xtensor/io/xio.hpp>
 
 #include "loadimages.hpp"
 #include "network.hpp"
@@ -56,7 +56,7 @@ void ClassifyIDXImage(Network& network, std::string image_path) {
 /// Simple CLI that inteprets network parameters and actions
 /// from the command line.
 int main(int argc, char** argv) {
-    std::string error_message = 
+    std::string error_message =
         "Training Options:\n"
         "mnist_example [--epochs <epochs>] [--learning-rate <learning rate>] [--batch-size <batch size>]\n"
         "   [--layer-sizes <<val1>,<val2>,<val3>>]\n"
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
 
             layer_sizes.push_back(10);
         }
-        
+
         // Set paths.
         else if (argument == "--load") {
             network_load_dir_path = value;

@@ -7,10 +7,10 @@
 #include <filesystem>
 #include <fstream>
 
-#include <xtensor/xarray.hpp>
-#include <xtensor/xrandom.hpp>
-#include <xtensor/xsort.hpp>
-#include <xtensor/xcsv.hpp>
+#include <xtensor/containers/xarray.hpp>
+#include <xtensor/generators/xrandom.hpp>
+#include <xtensor/misc/xsort.hpp>
+#include <xtensor/io/xcsv.hpp>
 #include <xtensor-blas/xlinalg.hpp>
 
 #include "progress-bar.hpp"
@@ -55,10 +55,10 @@ Network::Network(std::string dir_path) {
         layer_sizes.push_back(std::stoi(temp));
     }
 	input_stream.close();
-	
+
 	// Create array using read structure.
 	*this = Network(layer_sizes);
-	
+
 	// Read weight and bias arrays from files.
 	for (int i = 0; i < layer_sizes.size() - 1; i++) {
 		// Read weight array.
@@ -88,7 +88,7 @@ void Network::Save(std::string dir_path) {
 		output_stream.open(dir_path + "/layer-" + std::to_string(i) + "-weights.csv", std::ofstream::out);
 		xt::dump_csv(output_stream, weights[i]);
 		output_stream.close();
-		
+
 		// Save bias array.
 		output_stream.open(dir_path + "/layer-" + std::to_string(i) + "-biases.csv", std::ofstream::out);
 		xt::dump_csv(output_stream, xt::reshape_view(biases[i], {(size_t)1, (size_t)biases[i].shape(0)}));
@@ -105,9 +105,9 @@ xarray<float> NeuralNet::Inference(Network& network, xarray<float> previous_laye
 	//
 	// For the first layer operation.
 	// Biases are {n3-b, n4-b}
-	// 
+	//
 	// Weights are:
-	// n0-n3-w n1-n3-w n2-n3-w 
+	// n0-n3-w n1-n3-w n2-n3-w
 	// n0-n4-w n1-n4-w n2-n4-w
 	//
 	// The calculation for the output is (as a column vector):
@@ -116,8 +116,8 @@ xarray<float> NeuralNet::Inference(Network& network, xarray<float> previous_laye
 	//
 	// Which is just:
 	// Sigmoid(matmul(layer_weights * prev_layer^T) + layer_biases)
-    // 
-	// Becouse the output of the calculation 
+    //
+	// Becouse the output of the calculation
 	// naturally gives a column vector, only the original
 	// inputs needs to be transposed.
 	previous_layer = xt::transpose(previous_layer);
@@ -129,14 +129,14 @@ xarray<float> NeuralNet::Inference(Network& network, xarray<float> previous_laye
 		next_layer = Sigmoid::F(next_layer);
 		previous_layer = next_layer;
 	}
-	
+
 	return next_layer;
 }
 
 
 float NeuralNet::Test(Network& network, NetworkData testing_data) {
 	int correct = 0;
-		
+
 	for (int i = 0; i < testing_data.inputs.shape(0); i++) {
 		// Get the ith output inference and ith target array from the dataset.
 		xarray<float> outputs = Inference(network, xt::view(testing_data.inputs, i, xt::all()));
@@ -177,11 +177,11 @@ void NeuralNet::BackPropagation(
 		z_arrays.push_back(next_layer);
 		next_layer = Sigmoid::F(next_layer);
 		network_activations.push_back(next_layer);
-		
+
 		previous_layer = next_layer;
 	}
 
-	
+
 	// Layers are indexed with a superscript.
 	// Posiitons within an array/matrix within that
 	// layer is indexed with a subscript
@@ -217,15 +217,15 @@ void NeuralNet::BackPropagation(
     	// to all of the nodes in the layer.
     	// So the weight derivative relies on a single neuron in the next layer, with all of the weights
     	// connecting that node to the previous layer.
-		xt::view(weights_derivatives[weights_derivatives.size() - 1], i, xt::all()) 
+		xt::view(weights_derivatives[weights_derivatives.size() - 1], i, xt::all())
 			+= array_delZ_delW * array_delA_delZ[i] * array_delC_delA[i];
     }
-    
+
 	// dZ^L_j/dB^L_j is simply 1, so that term is removed from the chain rule.
     // Baises are a one dimensional array so it is simply multiplied.
     biases_derivatives[biases_derivatives.size() - 1] += array_delA_delZ * array_delC_delA;
 
-    
+
 	// Coninue backpropagation for the rest of the layers.
 	// Save the previously calcualted activation derivatives for calculation.
 	// The calculations are the same, except that each nueron in the previous layer,
@@ -233,7 +233,7 @@ void NeuralNet::BackPropagation(
 	// so dC/dA^L_j invovles the sum of derivatives on the next layer.
 	xarray<float> array_delC_delA_next = array_delC_delA;
     for (int layer_number = network.layer_sizes.size() - 2; layer_number >= 1; layer_number--) {
-    	
+
     	// Create new, zeroed array to hold activation derivatives for the layer.
 	    xarray<float> array_delC_delA = xt::zeros<float>({(size_t)network.layer_sizes[layer_number]});
 
@@ -253,7 +253,7 @@ void NeuralNet::BackPropagation(
 
 		// Apply calculations to sample derivatives, in the same way as the last layer.
         for (int i = 0; i < network.layer_sizes[layer_number]; i++) {
-            xt::view(weights_derivatives[layer_number - 1], i, xt::all()) 
+            xt::view(weights_derivatives[layer_number - 1], i, xt::all())
             	+= array_delZ_delW * array_delA_delZ[i] * array_delC_delA[i];
 	    }
 
@@ -273,7 +273,7 @@ void NeuralNet::StochasticGradientDescent(
 
 	for (int epoch = 0; epoch < epochs; epoch++) {
 		std::cout << "epoch: "	<< epoch + 1 << "/" << epochs << std::endl;
-		
+
 		// Randomize training data. Specify a shared seed so that they
 		// are shuffled the same way.
 		uint32_t seed = std::random_device{}();
@@ -281,20 +281,20 @@ void NeuralNet::StochasticGradientDescent(
 		xt::random::shuffle(training_data.inputs);
 		xt::random::seed(seed);
 		xt::random::shuffle(training_data.targets);
-		
+
 		// Split training data into mini batches.
 		auto input_batches = xt::split(training_data.inputs, training_data.inputs.shape(0) / batch_size);
 		auto target_batches = xt::split(training_data.targets, training_data.inputs.shape(0) / batch_size);
-		
+
 		// Initilize progress bar that keeps track of minibatch progress.
 		ProgressBar progress_bar = ProgressBar(input_batches.size());
 
 		// Loop through all minibatches and perform SGD on each one.
 		for (int i = 0; i < input_batches.size(); i++) {
 
-			// Batch based estimate of the derivative of the loss function 
+			// Batch based estimate of the derivative of the loss function
 			// at the networks current position. The batch estimate is a
-			// simple sum of all sample estimates. 
+			// simple sum of all sample estimates.
 			vector<xarray<float>> weights_derivatives;
 			vector<xarray<float>> biases_derivatives;
 
@@ -307,18 +307,18 @@ void NeuralNet::StochasticGradientDescent(
 				    xt::zeros<float>({(size_t)network.layer_sizes[j + 1]})
 				);
 			}
-			
+
 			for (int j = 0; j < input_batches[0].shape(0); j++) {
 				// Single sample based estimate of the derivative of the loss
 				// function at the networks current position. The sample
 				// estimate is added to the batch estimate (total).
 				BackPropagation(
-					network, 
+					network,
 					{
-						xt::view(input_batches[i], j, xt::all()), 
+						xt::view(input_batches[i], j, xt::all()),
 						xt::view(target_batches[i], j, xt::all())
-					}, 
-					weights_derivatives, 
+					},
+					weights_derivatives,
 					biases_derivatives
 				);
 			}
@@ -332,13 +332,12 @@ void NeuralNet::StochasticGradientDescent(
 
 			// Move the progress bar forward for each completed mini batch.
 			progress_bar.IncrementBar();
-			
+
 		}
-		
+
 		// Display new accuracy after each epoch.
 		std::cout << std::endl;
 		std::cout << "Accuracy " << Test(network, testing_data) << std::endl;
 		std::cout << std::endl;
 	}
 }
-

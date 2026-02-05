@@ -1,56 +1,19 @@
-cmake_minimum_required(VERSION 3.10)
-project(neuralnet)
+# ~~~~ Project Configuration ~~~~
+cmake_minimum_required(VERSION 3.21)
+project(neuralnet LANGUAGES CXX)
 
-# ~~~~ Dependencies ~~~~
+# ~~~~ C++ Options ~~~~
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Give the option of using source or pre-build dependencies
-set(XTL_SOURCE_PATH "" CACHE PATH "Path to xtl source directory.")
-set(XTENSOR_SOURCE_PATH "" CACHE PATH "Path to xtensor source directory.")
-set(XTENSOR_BLAS_SOURCE_PATH "" CACHE PATH "Path to xtensor-blas source directory.")
-
-# Handle dependencies, using source if specified, otherwise
-# using package version.
-message("${XTL_SOURCE_PATH}")
-message("${XTENSOR_SOURCE_PATH}")
-message("${XTENSOR_BLAS_SOURCE_PATH}")
-
-if(XTL_SOURCE_PATH)
-	add_subdirectory("${XTL_SOURCE_PATH}")
-else()
-	find_package(xtl QUIET)
-endif()
-
-if(XTENSOR_SOURCE_PATH)
-	add_subdirectory("${XTENSOR_SOURCE_PATH}")
-else()
-	find_package(xtensor QUIET)
-endif()
-
-if(XTENSOR_BLAS_SOURCE_PATH)
-	add_subdirectory("${XTENSOR_BLAS_SOURCE_PATH}")
-else()
-	find_package(xtensor-blas QUIET)
-endif()
-
-# Use inbuild BLAS for xtensor-blas
-add_definitions(-DXTENSOR_USE_FLENS_BLAS)
-
-
-
+# ~~~~ Dependency Management ~~~~
+find_package(xtl CONFIG REQUIRED)
+find_package(xtensor CONFIG REQUIRED)
+find_package(xtensor-blas CONFIG REQUIRED)
 
 # ~~~~ Neural Network Library ~~~~
-
 add_subdirectory(src/)
 
-
-
-# ~~~~ Neural Network MNIST Handwritten Digits Example Program ~~~~
-
-# Check if building the example was enabled.
-set(BUILD_EXAMPLE "Build MNIST example program." ON)
-if(BUILD_EXAMPLE)
-	add_subdirectory(example/)
-endif()
-
-
-
+# ~~~~ MNIST Example Program ~~~~
+add_subdirectory(example/)

@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <vector>
 
-#include <xtensor/xarray.hpp>
-#include <xtensor/xadapt.hpp>
+#include <xtensor/containers/xarray.hpp>
+#include <xtensor/containers/xadapt.hpp>
 
 #include "network.hpp"
 
