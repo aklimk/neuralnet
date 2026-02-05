@@ -18,7 +18,8 @@ Includes a python drawing pad to test the classifier.
 
 
 # Features and Performance of the Network Library
-Achieves an accuracy of 98.x% with a time-to-convergence of 00:xx:xx on the MNIST handwritten digit dataset.
+Achieves an accuracy of 98.x% when running with higher parameter counts and slower learning rates to delay convergence. 
+With more balanced hyperparameters, it is able to achieve an accuracy of 9x.x% with a time-to-convergence of 00:xx:xx.
 
 Comparison of network accuracy on MNIST test set vs other techniques. Information 
 courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
