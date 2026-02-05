@@ -20,6 +20,7 @@ courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
 ## List of Features
 - Minibatch based SGD trainer with customizable batch sizes, epochs and learning rate.
     Achieves convergence xx times faster than a simpler non-batched trainer.
+- Vectorized backpropagation and inference using xtensor methods and BLAS based matrix multiplication operations.
 - Customizable number of layers and layer sizes.
 - Customizable activation functions for newtork layers.
 - Saving and loading of network.
