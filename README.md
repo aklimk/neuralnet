@@ -1,7 +1,7 @@
 # nueralnet
 GitHub project that includes a neural network library with customizable layers, activations and minibatch based SGD trainer with customizable training hyperparameters.
-Also includes an example program to create a datapipline and utilize the network library to decode MNIST handwritten digits at 98.x% accuracy.
-Includes a python drawing pad to test the classifier.
+Also includes an example program to create a datapipline and utilize the network library to create a sigmoid and MSE based classifier of the MNIST handwritten digits.
+Achieves up to 98.x% accuracy. Includes a python drawing pad to test the classifier.
 
 # Images 
 <table>
@@ -17,7 +17,9 @@ Includes a python drawing pad to test the classifier.
 </table>
 
 
-# Features and Performance of the Network Library
+# Features and Performance of Sigmoid/MSE Network on MNIST
+The project includes an example program to train a Sigmoid/MSE configuration of the library on the MNIST handwritten digit dataset.
+
 Achieves an accuracy of 98.x% when running with higher parameter counts and slower learning rates to delay convergence. 
 With more balanced hyperparameters, it is able to achieve an accuracy of 9x.x% with a time-to-convergence of 00:xx:xx.
 
