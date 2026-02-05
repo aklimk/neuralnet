@@ -1,6 +1,6 @@
 # nueralnet
 GitHub project that includes a neural network library with customizable layers, activations and minibatch based SGD trainer with customizable training hyperparameters.
-Also includes an example program to create a datapipline and utilize the network library to decode MNIST handwritten digits.
+Also includes an example program to create a datapipline and utilize the network library to decode MNIST handwritten digits at 98.x% accuracy.
 Includes a python drawing pad to test the classifier.
 
 # Images 
