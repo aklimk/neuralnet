@@ -26,6 +26,7 @@ courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
 - Saving and loading of network.
 - Initilization/Saving/Loading/Training and all customization done through library API that
     can be either statically or dynamically linked with applications.
+- Layer weights and biases are saved as csv files, allowing for easily extendable and human-readable model saves.
 
 # Building and Running
 This project uses cmake to build both the network library and the MNIST example application.
