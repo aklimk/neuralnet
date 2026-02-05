@@ -1,6 +1,7 @@
 # nueralnet
 GitHub project that includes a neural network library with customizable layers, activations and minibatch based SGD trainer with customizable training hyperparameters.
 Also includes an example program to create a datapipline and utilize the network library to decode MNIST handwritten digits.
+Includes a python drawing pad to test the classifier.
 
 # Features and Performance of the Network Library
 Achieves an accuracy of 98.x% with a time-to-convergence of 00:xx:xx on the MNIST handwritten digit dataset.
@@ -18,6 +19,7 @@ courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
 | CNN (3 CNN Ensemble)               | yes                                     | 99.91          |
 
 ## List of Features
+- Python drawing pad GUI allowing for easily testing inference on custom digits.
 - Minibatch based SGD trainer with customizable batch sizes, epochs and learning rate.
     Achieves convergence xx times faster than a simpler non-batched trainer.
 - Vectorized backpropagation and inference using xtensor methods and BLAS based matrix multiplication operations.
