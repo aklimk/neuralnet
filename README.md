@@ -3,17 +3,19 @@ GitHub project that includes a neural network library with customizable layers, 
 Also includes an example program to create a datapipline and utilize the network library to decode MNIST handwritten digits.
 Includes a python drawing pad to test the classifier.
 
+# Images 
 <table>
   <tr>
     <td valign="top" width="33%">
       <img src="neural-net-app.png" width="100%">
+      <img src="test-result.png" width="100%">
     </td>
     <td valign="top" width="25%">
       <img src="drawing-pad.png" width="100%">
     </td>
   </tr>
 </table>
-<img src="test-result.png" width="50%">
+
 
 # Features and Performance of the Network Library
 Achieves an accuracy of 98.x% with a time-to-convergence of 00:xx:xx on the MNIST handwritten digit dataset.
