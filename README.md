@@ -1,7 +1,7 @@
 # nueralnet
 GitHub project that includes a neural network library with customizable layers, activations and minibatch based SGD trainer with customizable training hyperparameters.
 Also includes an example program to create a datapipline and utilize the network library to create a sigmoid and MSE based classifier of the MNIST handwritten digits.
-Achieves up to 98.x% accuracy. Includes a python drawing pad to test the classifier.
+Achieves up to 98.2% accuracy on the MNIST handwritten test set. Includes a python drawing pad to test the classifier.
 
 # Images 
 <table>
@@ -20,8 +20,10 @@ Achieves up to 98.x% accuracy. Includes a python drawing pad to test the classif
 # Features and Performance of Sigmoid/MSE Network on MNIST
 The project includes an example program to train a Sigmoid/MSE configuration of the library on the MNIST handwritten digit dataset.
 
-Achieves an accuracy of 98.x% when running with higher parameter counts and slower learning rates to delay convergence. 
-With more balanced hyperparameters, it is able to achieve an accuracy of 9x.x% with a time-to-convergence of 00:xx:xx.
+Achieves an accuracy of 98.2% when running with higher parameter counts and slower learning rates to delay convergence. 
+
+With more balanced hyperparameters and layer sizes, it is able to achieve an accuracy of 97.5%+ 
+while reaching convergence in less than one minute, on a Ryzen 7 5800H.
 
 Comparison of network accuracy on MNIST test set vs other techniques. Information 
 courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
@@ -30,7 +32,7 @@ courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
 | Linear Classifier                  | No Training                             | 92.4           |
 | Non-Linear Classifier              | No Training                             | 96.7           |
 | Other Network (2-layer)            | no                                      | 98.4           |
-| This Project  (3-layer)            | no                                      | 98.x           |
+| This Project  (3-layer)            | no                                      | 98.2           |
 | Other Network (6-layer)            | yes                                     | 99.65          |
 | CNN (13-layer)                     | no                                      | 99.75          |
 | CNN (3 CNN Ensemble)               | yes                                     | 99.91          |
@@ -38,7 +40,7 @@ courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
 ## List of Features
 - Python drawing pad GUI allowing for easily testing inference on custom digits.
 - Minibatch based SGD trainer with customizable batch sizes, epochs and learning rate.
-    Achieves convergence xx times faster than a simpler non-batched trainer.
+    Achieves convergence at least 10 times faster than a simpler non-batched trainer.
 - Vectorized backpropagation and inference using xtensor methods and BLAS based matrix multiplication operations.
 - Customizable number of layers and layer sizes.
 - Customizable activation functions for newtork layers.
