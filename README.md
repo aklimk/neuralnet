@@ -31,8 +31,8 @@ courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
 | -------------                      |  -------------------------------------  | -------------  |
 | Linear Classifier                  | No Training                             | 92.4           |
 | Non-Linear Classifier              | No Training                             | 96.7           |
-| Other Network (2-layer)            | no                                      | 98.4           |
 | This Project  (3-layer)            | no                                      | 98.2           |
+| Other Network (2-layer)            | no                                      | 98.4           |
 | Other Network (6-layer)            | yes                                     | 99.65          |
 | CNN (13-layer)                     | no                                      | 99.75          |
 | CNN (3 CNN Ensemble)               | yes                                     | 99.91          |
