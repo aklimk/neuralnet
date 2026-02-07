@@ -22,8 +22,8 @@ The project includes an example program to train a Sigmoid/MSE configuration of 
 
 Achieves an accuracy of 98.2% when running with higher parameter counts and slower learning rates to delay convergence. 
 
-With more balanced hyperparameters and layer sizes, it is able to achieve an accuracy of 97.5%+ 
-while reaching convergence in less than one minute, on a Ryzen 7 5800H.
+With more balanced hyperparameters and layer sizes, it is able to achieve an accuracy of 92%+ 
+in less than a minute, on a Ryzen 7 5800H.
 
 Comparison of network accuracy on MNIST test set vs other techniques. Information 
 courtesy of wikipedia. https://en.wikipedia.org/wiki/MNIST_database.
