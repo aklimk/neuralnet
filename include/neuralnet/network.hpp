@@ -117,7 +117,7 @@ namespace NeuralNet {
 	/// # Returns
 	/// The accuracy of the network against the given single-class classification dataset.
 	/// Calculated as correct / total.
-	float Test(Network& network, NetworkData testing_data);
+	float Test(Network& network, const NetworkData& testing_data);
 
 
 	/// Estimates the derivatives of all parameters in the network
@@ -142,7 +142,7 @@ namespace NeuralNet {
 	/// # Invariants
 	/// Inputs and targets should only be a one dimensional array.
 	void BackPropagation(
-		Network& network, NetworkData training_data,
+		Network& network, const NetworkData& training_data,
 		vector<xarray<float>>& weights_derivatives,
 		vector<xarray<float>>& biases_derivatives
 	);
@@ -171,7 +171,7 @@ namespace NeuralNet {
 	/// # Invariants
 	/// Assumes the overall array size is divisible by the batch size.
 	void StochasticGradientDescent(
-	    Network& network, NetworkData training_data, NetworkData testing_data,
+	    Network& network, NetworkData training_data, const NetworkData& testing_data,
 	    int epochs, float learning_rate, int batch_size
 	);
 }

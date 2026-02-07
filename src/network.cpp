@@ -134,7 +134,7 @@ xarray<float> NeuralNet::Inference(Network& network, xarray<float> previous_laye
 }
 
 
-float NeuralNet::Test(Network& network, NetworkData testing_data) {
+float NeuralNet::Test(Network& network, const NetworkData& testing_data) {
 	int correct = 0;
 
 	for (int i = 0; i < testing_data.inputs.shape(0); i++) {
@@ -155,7 +155,7 @@ float NeuralNet::Test(Network& network, NetworkData testing_data) {
 
 
 void NeuralNet::BackPropagation(
-	Network& network, NetworkData training_data,
+	Network& network, const NetworkData& training_data,
 	vector<xarray<float>>& weights_derivatives,
 	vector<xarray<float>>& biases_derivatives
 ) {
@@ -266,7 +266,7 @@ void NeuralNet::BackPropagation(
 
 
 void NeuralNet::StochasticGradientDescent(
-    Network& network, NetworkData training_data, NetworkData testing_data,
+    Network& network, NetworkData training_data, const NetworkData& testing_data,
     int epochs, float learning_rate, int batch_size
 ) {
 	std::cout << "Accuracy " << Test(network, testing_data) << "\n" << std::endl;
