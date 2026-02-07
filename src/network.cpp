@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <thread>
+#include <cmath>
 #include <functional>
 #include <filesystem>
 #include <fstream>
@@ -40,7 +41,8 @@ Network::Network(vector<int> layer_sizes) {
 			vector<size_t> weights_layer_shape;
 			weights_layer_shape.push_back(layer_sizes[i + 1]);
 			weights_layer_shape.push_back(layer_sizes[i]);
-			weights.push_back(xt::random::randn<float>(weights_layer_shape, 0.0, 1.0 / (float)layer_sizes[i]));
+			float std_dev = std::sqrt(1.0 / (float)layer_sizes[i]);
+			weights.push_back(xt::random::randn<float>(weights_layer_shape, 0.0, std_dev));
 		}
 	}
 }
