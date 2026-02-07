@@ -63,10 +63,8 @@ The following sections describe different ways of making those libraries availab
 ```mkdir build && cd build```
 
 5. Invoke cmake in release mode, and link to vcpkg installation.</br>
-```cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake```
+```cmake ../ -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake```
 
 7. Build the project using the generated build files.</br>
 (Make) ```make```</br>
-(Visual Studio) ``` msbuild project.sln``` 
-
-
+(Visual Studio) ``` msbuild project.sln```

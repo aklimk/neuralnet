@@ -2,6 +2,13 @@
 cmake_minimum_required(VERSION 3.21)
 project(neuralnet LANGUAGES CXX)
 
+# ~~~~ Default Build Type (single-config generators) ~~~~
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+endif()
+
 # ~~~~ C++ Options ~~~~
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
