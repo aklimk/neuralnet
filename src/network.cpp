@@ -126,7 +126,6 @@ xarray<float> NeuralNet::Inference(Network& network, xarray<float> previous_laye
 
 	xarray<float> next_layer;
 	for (int i = 0; i < network.layer_sizes.size() - 1; i++) {
-		next_layer = xarray<float>::from_shape({(size_t)network.layer_sizes[i + 1]});
 		next_layer = xt::linalg::dot(network.weights[i], previous_layer) + network.biases[i];
 		next_layer = Sigmoid::F(next_layer);
 		previous_layer = next_layer;
@@ -167,7 +166,12 @@ void NeuralNet::BackPropagation(
 	// is that the raw non-activation function values are also kept
 	// for each layers neurons. Theese are the z values.
 	vector<xarray<float>> z_arrays;
-	vector<xarray<float>> network_activations = {training_data.inputs};
+	z_arrays.reserve(network.layer_sizes.size() - 1);
+
+	vector<xarray<float>> network_activations;
+    network_activations.reserve(network.layer_sizes.size());
+    network_activations.push_back(training_data.inputs);
+
 	xarray<float> previous_layer = xt::transpose(training_data.inputs);
 	xarray<float> next_layer;
 	for (int i = 0; i < network.layer_sizes.size() - 1; i++) {
@@ -268,7 +272,7 @@ void NeuralNet::BackPropagation(
 
 
 void NeuralNet::StochasticGradientDescent(
-    Network& network, NetworkData training_data, const NetworkData& testing_data,
+    Network& network, NetworkData& training_data, const NetworkData& testing_data,
     int epochs, float learning_rate, int batch_size
 ) {
 	std::cout << "Accuracy " << Test(network, testing_data) << "\n" << std::endl;
@@ -336,8 +340,8 @@ void NeuralNet::StochasticGradientDescent(
 			// calculated from the batch derivative, with a step size according to the learning rate.
 			float step_size = learning_rate / static_cast<float>(input_batches[0].shape(0));
 			for (int j = 0; j < network.layer_sizes.size() - 1; j++) {
-				network.weights[j] = network.weights[j] - step_size * weights_derivatives[j];
-				network.biases[j] = network.biases[j] - step_size * biases_derivatives[j];
+				network.weights[j] -= step_size * weights_derivatives[j];
+				network.biases[j] -= step_size * biases_derivatives[j];
 			}
 
 			// Move the progress bar forward for each completed mini batch.

@@ -171,7 +171,7 @@ namespace NeuralNet {
 	/// # Invariants
 	/// Assumes the overall array size is divisible by the batch size.
 	void StochasticGradientDescent(
-	    Network& network, NetworkData training_data, const NetworkData& testing_data,
+	    Network& network, NetworkData& training_data, const NetworkData& testing_data,
 	    int epochs, float learning_rate, int batch_size
 	);
 }
