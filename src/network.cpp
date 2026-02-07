@@ -325,9 +325,10 @@ void NeuralNet::StochasticGradientDescent(
 
 			// Move the network parameters in the negative derivative direction estimate
 			// calculated from the batch derivative, with a step size according to the learning rate.
+			float step_size = learning_rate / static_cast<float>(input_batches[0].shape(0));
 			for (int j = 0; j < network.layer_sizes.size() - 1; j++) {
-				network.weights[j] = network.weights[j] - learning_rate * weights_derivatives[j];
-				network.biases[j] = network.biases[j] - learning_rate * biases_derivatives[j];
+				network.weights[j] = network.weights[j] - step_size * weights_derivatives[j];
+				network.biases[j] = network.biases[j] - step_size * biases_derivatives[j];
 			}
 
 			// Move the progress bar forward for each completed mini batch.

@@ -150,6 +150,17 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    // Print parameters for debugging.
+    std::cout << "epochs: " << epochs << std::endl;
+    std::cout << "learning rate: " << learning_rate << std::endl;
+    std::cout << "batch size: " << batch_size << std::endl;
+    std::cout << "layer sizes: ";
+    for (int layer_size : layer_sizes) {
+        std::cout << layer_size << " ";
+    }
+    std::cout << std::endl;
+
+
     // Execute arguments.
     // Construct network with specified layout.
     Network network = Network(layer_sizes);
