@@ -21,7 +21,7 @@ namespace Sigmoid {
 	 * An xtensor xexpression object. Xexpression objects are lazy evauluated, only
 	 * being evaluated when assigned to a container type.
     */
-	auto F(xarray<float>& array) {
+	auto F(const xarray<float>& array) {
 		return 1.0 / (1.0 + xt::exp(-array));
 	}
 
@@ -35,10 +35,11 @@ namespace Sigmoid {
 	 * `array` : Reference to xtensor array to create an xtensor expression from.
 	 *
 	 * # Returns
-	 * An xtensor xexpression object. Xexpression objects are lazy evauluated, only
-	 * being evaluated when assigned to a container type.
+	 * An materialized set of values. Avoiding lazy expressions allows for caching
+	 * the result of F().
     */
-	auto FPrime(xarray<float>& array) {
-		return F(array) * (1 - F(array));
+	xarray<float> FPrime(const xarray<float>& array) {
+	    auto f_array = xt::eval(F(array));
+		return f_array * (1 - f_array);
 	}
 };
