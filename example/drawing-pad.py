@@ -6,23 +6,25 @@ The program gives a simple, non-erasable drawing surface then saves it
 in IDX file fomatting, ready for network inference.
 """
 
-import pygame
-import numpy
 import math
-from PIL import Image
 import struct
+
+import numpy
+import pygame
+from PIL import Image
+
 
 def ConvertToIDX(image_path="image.png", output_path="image.idx"):
     """Converts a raw image to the formatt neccecary for network inference.
 
     Downsacles the image to 28x28, inverts the colors and saves the resulting
     array as an IDX format, which the network can read and classify.
-        
+
     """
-    image = Image.open(input_path)
-    image = image.resize((28, 28)).convert('L')
+    image = Image.open(image_path)
+    image = image.resize((28, 28)).convert("L")
     canvas = numpy.array(image.getdata())
-    
+
     # Invert colors. Needed for compliance with MNIST.
     canvas = 255 - canvas
 
@@ -39,7 +41,7 @@ def ConvertToIDX(image_path="image.png", output_path="image.idx"):
         for byte in canvas.flatten():
             file.write(struct.pack(">B", byte))
 
-    
+
 def GetDrawing(size=600, output_path="image.png"):
     """Creates a basic greyscale drawing surface with a single pen style and no eraser.
 
@@ -51,7 +53,7 @@ def GetDrawing(size=600, output_path="image.png"):
     screen = pygame.display.set_mode((size, size))
     pygame.display.set_caption("Drawing Pad")
     screen.fill((255, 255, 255))
-    
+
     drawing = False
     running = True
     while running:
