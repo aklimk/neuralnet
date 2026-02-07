@@ -245,7 +245,7 @@ void NeuralNet::BackPropagation(
         	// The first part is the network weights for a partiuclar neuron in the next
         	// layer feeding back to the previous layer.
         	auto weights_view = xt::view(network.weights[layer_number], xt::all(), i);
-        	xarray<float> product = weights_view * array_delA_delZ * array_delC_delA_next;
+        	auto product = weights_view * array_delA_delZ * array_delC_delA_next;
 			array_delC_delA[i] = xt::sum(product)(0);
 	    }
 
