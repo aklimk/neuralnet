@@ -291,23 +291,30 @@ void NeuralNet::StochasticGradientDescent(
 		// Initilize progress bar that keeps track of minibatch progress.
 		ProgressBar progress_bar = ProgressBar(input_batches.size());
 
+		// Batch based estimate of the derivative of the loss function
+		// at the networks current position on the loss surface.
+		// The batch estimate is a simple sum of all sample estimates.
+		vector<xarray<float>> weights_derivatives;
+		vector<xarray<float>> biases_derivatives;
+
+		// Populate batch derivatives with zero initialized arrays.
+		for (int j = 0; j < network.layer_sizes.size() - 1; j++) {
+			weights_derivatives.push_back(
+			    xt::zeros<float>({(size_t)network.layer_sizes[j + 1], (size_t)network.layer_sizes[j]})
+			);
+			biases_derivatives.push_back(
+			    xt::zeros<float>({(size_t)network.layer_sizes[j + 1]})
+			);
+		}
+
 		// Loop through all minibatches and perform SGD on each one.
 		for (int i = 0; i < input_batches.size(); i++) {
-
-			// Batch based estimate of the derivative of the loss function
-			// at the networks current position. The batch estimate is a
-			// simple sum of all sample estimates.
-			vector<xarray<float>> weights_derivatives;
-			vector<xarray<float>> biases_derivatives;
-
-			// Populate batch derivatives with zero initilized arrays.
-			for (int j = 0; j < network.layer_sizes.size() - 1; j++) {
-				weights_derivatives.push_back(
-				    xt::zeros<float>({(size_t)network.layer_sizes[j + 1], (size_t)network.layer_sizes[j]})
-				);
-				biases_derivatives.push_back(
-				    xt::zeros<float>({(size_t)network.layer_sizes[j + 1]})
-				);
+		    // Fill batch derivatives with zeros instead of re-initializing them every time.
+			if (i > 0) {
+			    for (int j = 0; j < network.layer_sizes.size() - 1; j++) {
+					weights_derivatives[j].fill(0);
+    			    biases_derivatives[j].fill(0);
+				}
 			}
 
 			for (int j = 0; j < input_batches[0].shape(0); j++) {
